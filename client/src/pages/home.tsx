@@ -101,7 +101,7 @@ export default function Home() {
           <div className="w-20 h-20 bg-radio-yellow rounded-full flex items-center justify-center mx-auto mb-6">
             <Radio className="w-10 h-10 text-radio-dark" />
           </div>
-          <h2 className="text-2xl font-bold mb-4">Welcome to RadioAI</h2>
+          <h2 className="text-2xl font-bold mb-4">Welcome to RadioChat</h2>
           <p className="text-gray-400 mb-6">Loading your personalized news radio experience...</p>
           <div className="animate-pulse flex space-x-2 justify-center">
             <div className="w-2 h-2 bg-radio-yellow rounded-full"></div>

@@ -436,7 +436,7 @@ export default function SettingsPage() {
         {/* About */}
         <Card className="bg-radio-card border-gray-700">
           <CardHeader>
-            <CardTitle>About RadioAI</CardTitle>
+            <CardTitle>About RadioChat</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm text-gray-400">
