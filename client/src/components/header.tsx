@@ -58,7 +58,7 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
         <div className="flex items-center space-x-4">
           <div className="relative">
             <div className="w-10 h-10 bg-gradient-to-r from-radio-yellow to-yellow-400 rounded-full flex items-center justify-center shadow-lg">
-              <Radio className="w-5 h-5 text-radio-dark" />
+              <Radio className="w-5 h-5 text-radio-yellow" />
             </div>
             {isLive && (
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border-2 border-radio-surface" />
@@ -66,8 +66,8 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
           </div>
 
           <div className="cursor-pointer" onClick={() => setLocation('/')}>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-radio-yellow to-yellow-400 bg-clip-text text-transparent">
-              RadioAI
+            <h1 className="text-xl font-bold text-yellow-400">
+              RadioChat
             </h1>
             <div className="flex items-center space-x-2 text-xs text-gray-400">
               <div className={cn(
