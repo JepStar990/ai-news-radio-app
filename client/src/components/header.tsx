@@ -2,14 +2,13 @@ import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Search, 
-  Bell, 
-  User, 
-  Menu, 
+import {
+  Search,
+  Bell,
+  User,
+  Menu,
   Radio,
   Zap,
-  Mic,
   Settings,
   TrendingUp,
   Clock
@@ -29,7 +28,6 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [, setLocation] = useLocation();
 
-  // Update time every minute
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -37,10 +35,9 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch notifications data
   const { data: notificationsData } = useQuery({
     queryKey: ['/api/notifications'],
-    refetchInterval: 300000, // Refetch every 5 minutes
+    refetchInterval: 300000,
   });
 
   const unreadCount = Array.isArray(notificationsData) ? notificationsData.filter((n: any) => !n.read).length : 0;
@@ -53,12 +50,10 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
     }
   };
 
-  // Remove this line as it's not needed - we use unreadCount instead
-
   return (
     <header className="bg-gradient-to-r from-radio-surface to-radio-card border-b border-gray-800 px-4 py-3 sticky top-0 z-50 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        
+
         {/* Left Section - Logo & Status */}
         <div className="flex items-center space-x-4">
           <div className="relative">
@@ -69,7 +64,7 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border-2 border-radio-surface" />
             )}
           </div>
-          
+
           <div className="cursor-pointer" onClick={() => setLocation('/')}>
             <h1 className="text-xl font-bold bg-gradient-to-r from-radio-yellow to-yellow-400 bg-clip-text text-transparent">
               RadioAI
@@ -90,7 +85,7 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
             </div>
           </div>
         </div>
-        
+
         {/* Center Section - Search */}
         <div className="hidden md:flex items-center flex-1 max-w-lg mx-6">
           <form onSubmit={handleSearch} className="relative w-full">
@@ -113,42 +108,29 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
             </div>
           </form>
         </div>
-        
+
         {/* Right Section - Controls */}
         <div className="flex items-center space-x-2">
-          
-          {/* Voice Search (Desktop) */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="hidden lg:flex hover:bg-radio-card rounded-full text-gray-300 hover:text-radio-yellow transition-colors"
-            onClick={() => {
-              // Toggle voice search functionality
-              console.log('Voice search clicked');
-            }}
-          >
-            <Mic className="w-4 h-4" />
-          </Button>
-          
+
           {/* Live Status Toggle */}
           <Button
             variant="ghost"
             size="icon"
             className={cn(
               "hidden md:flex rounded-full transition-colors",
-              isLive 
-                ? "bg-red-500/20 text-red-400 hover:bg-red-500/30" 
+              isLive
+                ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
                 : "hover:bg-radio-card text-gray-300 hover:text-white"
             )}
             onClick={() => setIsLive(!isLive)}
           >
             <Zap className="w-4 h-4" />
           </Button>
-          
+
           {/* Notifications */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="relative hover:bg-radio-card rounded-full text-gray-300 hover:text-radio-yellow transition-colors"
             onClick={() => {
               console.log('Notifications clicked');
@@ -162,21 +144,21 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
               </Badge>
             )}
           </Button>
-          
+
           {/* Settings */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="hidden sm:flex hover:bg-radio-card rounded-full text-gray-300 hover:text-white transition-colors"
             onClick={() => setLocation('/settings')}
           >
             <Settings className="w-4 h-4" />
           </Button>
-          
+
           {/* Profile */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="hover:bg-radio-card rounded-full text-gray-300 hover:text-white transition-colors"
             onClick={() => {
               console.log('Profile clicked');
@@ -185,11 +167,11 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
           >
             <User className="w-4 h-4" />
           </Button>
-          
+
           {/* Mobile Menu */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="md:hidden hover:bg-radio-card rounded-full text-gray-300 hover:text-white transition-colors"
             onClick={onMenuClick}
           >
@@ -197,7 +179,7 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
           </Button>
         </div>
       </div>
-      
+
       {/* Mobile Search Bar */}
       <div className="md:hidden mt-3">
         <form onSubmit={handleSearch} className="relative">
