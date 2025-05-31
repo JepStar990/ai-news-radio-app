@@ -5,6 +5,7 @@ import path from "path";
 export default defineConfig({
   plugins: [
     react(),
+    // Removed Replit runtime error overlay and cartographer plugin
   ],
   resolve: {
     alias: {
