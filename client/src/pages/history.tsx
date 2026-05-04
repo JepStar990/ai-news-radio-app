@@ -1,40 +1,69 @@
-import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Play, Clock, Calendar } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useAudio } from '@/lib/audio-context';
-import type { Article } from '@/types';
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/lib/auth-context";
+import { isUserBackendAvailable } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Play, Clock, Calendar } from "lucide-react";
+import { useAudio } from "@/lib/audio-context";
+import type { Article } from "@/types";
 
 export default function History() {
-  const { data: historyArticles, isLoading } = useQuery<Article[]>({
-    queryKey: ['/api/history'],
+  const { isBackendAvailable, isAuthenticated } = useAuth();
+  const useGo = isBackendAvailable && isAuthenticated;
+
+  const queryKey = useGo ? ["/api/private/history"] : ["/api/history"];
+  const statsKey = useGo ? ["/api/private/history/stats"] : null;
+
+  const { data, isLoading } = useQuery<any>({ queryKey });
+  const { data: statsData } = useQuery<any>({
+    queryKey: statsKey || ["__noop__"],
+    enabled: !!statsKey,
   });
+
+  const normalized = useGo
+    ? (data?.history || data || []).map((h: any) => ({
+        id: h.ContentID || h.content_id || "0",
+        title: h.ContentID || h.content_id || "Untitled",
+        summary: h.ContentType || h.content_type || "",
+        category: h.ContentType || h.content_type || "Unknown",
+        sourceName: "",
+        readTime: Math.round((h.DurationSeconds || 0) / 60),
+        imageUrl: null,
+        audioUrl: null,
+        publishedAt: h.UpdatedAt || h.updated_at || new Date().toISOString(),
+        completed: h.Completed || h.completed || false,
+        progress: h.LastPositionSeconds || h.last_position_seconds || 0,
+        duration: h.DurationSeconds || 0,
+      })) as (Article & { completed?: boolean; progress?: number; duration?: number })[]
+    : (data as (Article & { completed?: boolean; progress?: number; duration?: number })[]);
+
+  const stats = statsData?.stats || null;
+  const articleCount = stats?.completed_items || normalized?.length || 0;
+  const totalMinutes = stats?.total_listening_seconds
+    ? Math.round(stats.total_listening_seconds / 60)
+    : normalized?.reduce((acc, a) => acc + (a.readTime || 0), 0) || 0;
 
   const { playArticle } = useAudio();
 
   const formatDate = (date: Date | string) => {
     try {
-      const validDate = typeof date === 'string' ? new Date(date) : date;
-      if (isNaN(validDate.getTime())) {
-        return 'Invalid date';
-      }
-      return new Intl.DateTimeFormat('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+      const validDate = typeof date === "string" ? new Date(date) : date;
+      if (isNaN(validDate.getTime())) return "";
+      return new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       }).format(validDate);
-    } catch (error) {
-      return 'Invalid date';
+    } catch {
+      return "";
     }
   };
 
   const formatDuration = (minutes: number) => {
-    if (minutes < 60) {
-      return `${minutes}m`;
-    }
+    if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
@@ -44,21 +73,11 @@ export default function History() {
     return (
       <div className="min-h-screen bg-radio-dark text-white p-6">
         <div className="max-w-4xl mx-auto">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-800 rounded w-48"></div>
-            <div className="h-4 bg-gray-800 rounded w-96"></div>
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="bg-radio-surface rounded-lg p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-gray-800 rounded-lg"></div>
-                  <div className="flex-1 space-y-2">
-                    <div className="h-5 bg-gray-800 rounded w-3/4"></div>
-                    <div className="h-4 bg-gray-800 rounded w-1/2"></div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <Skeleton className="h-8 w-48 mb-4" />
+          <Skeleton className="h-4 w-96 mb-6" />
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full rounded-lg mb-4" />
+          ))}
         </div>
       </div>
     );
@@ -69,19 +88,16 @@ export default function History() {
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Listening History</h1>
-          <p className="text-gray-400">
-            Recently played articles and podcasts
-          </p>
+          <p className="text-gray-400">Recently played articles and podcasts</p>
         </div>
 
-        {/* History Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="bg-radio-surface border-gray-800">
             <CardContent className="p-6">
               <div className="flex items-center gap-3">
                 <Clock className="w-8 h-8 text-radio-yellow" />
                 <div>
-                  <div className="text-2xl font-bold">{historyArticles?.length || 0}</div>
+                  <div className="text-2xl font-bold">{articleCount}</div>
                   <p className="text-sm text-gray-400">Articles played</p>
                 </div>
               </div>
@@ -93,9 +109,7 @@ export default function History() {
               <div className="flex items-center gap-3">
                 <Calendar className="w-8 h-8 text-blue-400" />
                 <div>
-                  <div className="text-2xl font-bold">
-                    {historyArticles ? formatDuration(historyArticles.reduce((acc, article) => acc + (article.readTime || 0), 0)) : '0m'}
-                  </div>
+                  <div className="text-2xl font-bold">{formatDuration(totalMinutes)}</div>
                   <p className="text-sm text-gray-400">Total listening time</p>
                 </div>
               </div>
@@ -115,13 +129,14 @@ export default function History() {
           </Card>
         </div>
 
-        {/* History List */}
         <div className="space-y-4">
-          {historyArticles?.map((article) => (
-            <Card key={article.id} className="bg-radio-surface border-gray-800 hover:border-radio-yellow/30 transition-colors">
+          {normalized?.map((article) => (
+            <Card
+              key={article.id}
+              className="bg-radio-surface border-gray-800 hover:border-radio-yellow/30 transition-colors"
+            >
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
-                  {/* Article Image */}
                   {article.imageUrl && (
                     <img
                       src={article.imageUrl}
@@ -130,7 +145,6 @@ export default function History() {
                     />
                   )}
 
-                  {/* Article Info */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-lg mb-2 line-clamp-1">
                       {article.title}
@@ -140,45 +154,47 @@ export default function History() {
                     </p>
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <span>{article.sourceName}</span>
-                      <span>•</span>
                       <span>{formatDate(article.publishedAt)}</span>
-                      <span>•</span>
                       <span>{article.readTime || 0} min</span>
+                      {article.completed && (
+                        <Badge variant="outline" className="text-green-400 border-green-400">
+                          Completed
+                        </Badge>
+                      )}
                     </div>
                   </div>
 
-                  {/* Category and Actions */}
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <Badge variant="outline" className="text-gray-400 border-gray-600">
                       {article.category}
                     </Badge>
-                    
+
                     <Button
                       variant="ghost"
                       size="icon"
                       className="text-radio-yellow hover:bg-radio-yellow/10"
                       title="Play Again"
-                      onClick={() => playArticle(article)}
+                      onClick={() => playArticle(article as Article)}
                     >
                       <Play className="w-5 h-5" />
                     </Button>
                   </div>
                 </div>
 
-                {/* Progress bar (mock progress for demonstration) */}
-                <div className="mt-4 w-full bg-gray-800 rounded-full h-1">
-                  <div 
-                    className="bg-radio-yellow h-1 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.random() * 100}%` }}
-                  />
-                </div>
+                {article.progress != null && article.duration != null && article.duration > 0 && (
+                  <div className="mt-4 w-full bg-gray-800 rounded-full h-1">
+                    <div
+                      className="bg-radio-yellow h-1 rounded-full transition-all duration-300"
+                      style={{ width: `${Math.min(100, (article.progress / article.duration) * 100)}%` }}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           )) || []}
         </div>
 
-        {/* Empty State */}
-        {(!historyArticles || historyArticles.length === 0) && !isLoading && (
+        {(!normalized || normalized.length === 0) && !isLoading && (
           <div className="text-center py-16">
             <Clock className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2 text-gray-300">No Listening History</h3>

@@ -11,11 +11,14 @@ import {
   Zap,
   Settings,
   TrendingUp,
-  Clock
+  Clock,
+  LogOut,
+  LogIn,
 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth-context';
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -34,6 +37,8 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
     }, 60000);
     return () => clearInterval(timer);
   }, []);
+
+  const { isAuthenticated, user, isBackendAvailable, logout } = useAuth();
 
   const { data: notificationsData } = useQuery({
     queryKey: ['/api/notifications'],
@@ -155,18 +160,48 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
             <Settings className="w-4 h-4" />
           </Button>
 
-          {/* Profile */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hover:bg-radio-card rounded-full text-gray-300 hover:text-white transition-colors"
-            onClick={() => {
-              console.log('Profile clicked');
-              setLocation('/profile');
-            }}
-          >
-            <User className="w-4 h-4" />
-          </Button>
+          {/* Profile / Auth */}
+          {isBackendAvailable && isAuthenticated ? (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover:bg-radio-card rounded-full text-gray-300 hover:text-white transition-colors"
+                onClick={() => setLocation('/profile')}
+                title={user?.username || user?.email || "Profile"}
+              >
+                <User className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover:bg-radio-card rounded-full text-gray-300 hover:text-red-400 transition-colors"
+                onClick={() => logout()}
+                title="Sign out"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </>
+          ) : isBackendAvailable ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-radio-card rounded-full text-gray-300 hover:text-radio-yellow transition-colors"
+              onClick={() => setLocation('/login')}
+              title="Sign in"
+            >
+              <LogIn className="w-4 h-4" />
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-radio-card rounded-full text-gray-300 hover:text-white transition-colors"
+              onClick={() => setLocation('/profile')}
+            >
+              <User className="w-4 h-4" />
+            </Button>
+          )}
 
           {/* Mobile Menu */}
           <Button

@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AudioProvider } from "@/lib/audio-context";
+import { AuthProvider } from "@/lib/auth-context";
 import { Header } from "@/components/header";
 import { Sidebar } from "@/components/sidebar";
 import { AudioPlayer } from "@/components/ui/audio-player";
@@ -20,6 +21,8 @@ import Notifications from "@/pages/notifications";
 import Podcasts from "@/pages/podcasts";
 import Social from "@/pages/social";
 import Live from "@/pages/live";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
 import NotFound from "@/pages/not-found";
 import { useState } from "react";
 
@@ -39,6 +42,8 @@ function Router() {
       <Route path="/social" component={Social} />
       <Route path="/profile" component={Profile} />
       <Route path="/notifications" component={Notifications} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -49,6 +54,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AuthProvider>
       <TooltipProvider>
         <AudioProvider>
           <div className="min-h-screen flex flex-col bg-radio-dark text-white">
@@ -86,6 +92,7 @@ function App() {
           <Toaster />
         </AudioProvider>
       </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

@@ -8,6 +8,8 @@ import { useAudio } from '@/lib/audio-context';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/lib/auth-context';
+import { addFavorite, removeFavorite } from '@/lib/api';
 
 interface ArticleListItemProps {
   article: Article;
@@ -29,25 +31,39 @@ export function ArticleListItem({ article, className }: ArticleListItemProps) {
   const { currentArticle, isPlaying, playArticle, pauseAudio, resumeAudio } = useAudio();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isBackendAvailable, isAuthenticated } = useAuth();
+  const useGo = isBackendAvailable && isAuthenticated;
 
   const isCurrentArticle = currentArticle?.id === article.id;
   const isCurrentlyPlaying = isCurrentArticle && isPlaying;
 
   // Check if article is favorited
-  const { data: favoriteStatus } = useQuery({
-    queryKey: [`/api/favorites/${article.id}/check`],
+  const favCheckKey = useGo
+    ? ["/api/private/favorites"]
+    : [`/api/favorites/${article.id}/check`];
+
+  const { data: favData } = useQuery({
+    queryKey: favCheckKey,
+    enabled: !!favCheckKey,
   });
 
-  const isFavorited = favoriteStatus?.isFavorite || false;
+  const isFavorited = useGo
+    ? Array.isArray(favData) && favData.some(
+        (f: any) => (f.ContentID || f.content_id) === String(article.id)
+      )
+    : (favData as any)?.isFavorite || false;
 
   // Add to favorites mutation
   const addFavoriteMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest('POST', '/api/favorites', { articleId: article.id });
+      if (useGo) {
+        return addFavorite(String(article.id), "article");
+      }
+      return apiRequest('POST', '/api/favorites', { articleId: article.id });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/favorites/${article.id}/check`] });
-      queryClient.invalidateQueries({ queryKey: ['/api/favorites'] });
+      queryClient.invalidateQueries({ queryKey: favCheckKey });
+      queryClient.invalidateQueries({ queryKey: useGo ? ["/api/private/favorites"] : ["/api/favorites"] });
       toast({
         title: "Added to favorites",
         description: "Article has been added to your favorites.",
@@ -65,11 +81,14 @@ export function ArticleListItem({ article, className }: ArticleListItemProps) {
   // Remove from favorites mutation
   const removeFavoriteMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest('DELETE', `/api/favorites/${article.id}`, {});
+      if (useGo) {
+        return removeFavorite(String(article.id), "article");
+      }
+      return apiRequest('DELETE', `/api/favorites/${article.id}`, {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/favorites/${article.id}/check`] });
-      queryClient.invalidateQueries({ queryKey: ['/api/favorites'] });
+      queryClient.invalidateQueries({ queryKey: favCheckKey });
+      queryClient.invalidateQueries({ queryKey: useGo ? ["/api/private/favorites"] : ["/api/favorites"] });
       toast({
         title: "Removed from favorites",
         description: "Article has been removed from your favorites.",
@@ -77,7 +96,7 @@ export function ArticleListItem({ article, className }: ArticleListItemProps) {
     },
     onError: () => {
       toast({
-        title: "Error", 
+        title: "Error",
         description: "Failed to remove article from favorites.",
         variant: "destructive",
       });
