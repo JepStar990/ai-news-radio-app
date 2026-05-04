@@ -1,5 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { getStoredToken, clearTokens } from "./api";
+import { getStoredToken, clearTokens, extractErrorMessage } from "./api";
 
 // Content API base URL (Express, same-origin fallback)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
@@ -16,7 +16,7 @@ function isUserApiRoute(url: string): boolean {
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    throw new Error(extractErrorMessage(res.status, text));
   }
 }
 

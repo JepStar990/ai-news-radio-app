@@ -58,6 +58,16 @@ export function setStoredUser(u: UserInfo): void {
 
 // ---- Generic fetch helpers ----
 
+export function extractErrorMessage(status: number, body: string): string {
+  try {
+    const json = JSON.parse(body);
+    if (json?.error?.message) return json.error.message;
+    if (json?.message) return json.message;
+    if (json?.error) return String(json.error);
+  } catch {}
+  return `${status}: ${body || "Request failed"}`;
+}
+
 async function request(
   baseUrl: string | undefined,
   method: string,
@@ -86,7 +96,7 @@ async function request(
   }
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);
-    throw new Error(`${res.status}: ${text}`);
+    throw new Error(extractErrorMessage(res.status, text));
   }
   return res;
 }
