@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Radio, Mail, Lock, User, AlertCircle } from "lucide-react";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME_RE = /^[a-zA-Z0-9_]{3,50}$/;
+
 export default function Register() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -19,9 +22,30 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    const trimmedEmail = email.trim();
+    const trimmedUsername = username.trim();
+
+    if (!trimmedUsername || trimmedUsername.length < 3) {
+      setError("Username must be at least 3 characters.");
+      return;
+    }
+    if (!USERNAME_RE.test(trimmedUsername)) {
+      setError("Username can only contain letters, numbers, and underscores.");
+      return;
+    }
+    if (!trimmedEmail || !EMAIL_RE.test(trimmedEmail)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    if (!password || password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
     setLoading(true);
     try {
-      await register(email, username, password);
+      await register(trimmedEmail, trimmedUsername, password);
       setLocation("/");
     } catch (err: any) {
       setError(err.message || "Registration failed");

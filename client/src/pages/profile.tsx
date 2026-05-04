@@ -65,21 +65,21 @@ export default function ProfilePage() {
     enabled: isBackendAvailable && isAuthenticated,
   });
 
-  // Get counts - from Go backend or fallback to hardcoded
+  // Get counts - from Go backend or fallback to 0
   const favCount = isBackendAvailable && Array.isArray(favData)
     ? favData.length
-    : 32;
+    : 0;
   const dlCount = isBackendAvailable && Array.isArray(dlData)
     ? dlData.length
-    : 8;
+    : 0;
   const histCount = isBackendAvailable && Array.isArray(histData)
     ? histData.length
-    : 147;
+    : 0;
 
   const profile = (profileData as any) || {};
   const displayName =
     user?.fullName || profile.full_name || user?.username || "Radio Listener";
-  const displayEmail = user?.email || "listener@radioai.com";
+  const displayEmail = user?.email || profile.email || "";
   const avatarUrl = user?.avatarUrl || profile.avatar_url || "";
   const bio = user?.bio || profile.bio || "";
   const initials = displayName
@@ -97,7 +97,7 @@ export default function ProfilePage() {
   const updateMutation = useMutation({
     mutationFn: async () => {
       if (isBackendAvailable) {
-        return updateProfile(editName, editBio);
+        return updateProfile(editName.trim(), editBio.trim());
       }
       return null;
     },

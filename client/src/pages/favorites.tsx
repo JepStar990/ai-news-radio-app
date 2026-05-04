@@ -19,10 +19,10 @@ export default function Favorites() {
 
   const { data, isLoading } = useQuery<any[]>({ queryKey });
 
-  // Normalize data: Go backend returns UserFavorite records, Express returns Article[]
+  // Normalize data: Go backend returns {favorites: [...]}, Express returns Article[]
   const favorites = useGo
-    ? (data || []).map((f: any) => ({
-        id: f.ID || f.id,
+    ? ((data as any)?.favorites || data || []).map((f: any) => ({
+        id: f.ID || f.id || String(f.ContentID || f.content_id || "0"),
         title: f.Title || f.ContentID || f.content_id || "Untitled",
         summary: f.ContentType || f.content_type || "",
         category: f.ContentType || f.content_type || "Unknown",

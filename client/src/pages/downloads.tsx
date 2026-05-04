@@ -19,8 +19,8 @@ export default function Downloads() {
   const { data, isLoading } = useQuery<any[]>({ queryKey });
 
   const downloadedArticles = useGo
-    ? (data || []).map((d: any) => ({
-        id: d.ID || d.id || 0,
+    ? ((data as any)?.downloads || data || []).map((d: any) => ({
+        id: d.ID || d.id || String(d.ContentID || d.content_id || "0"),
         title: d.Title || d.ContentID || d.content_id || "Untitled",
         summary: d.ContentType || d.content_type || "",
         category: d.ContentType || d.content_type || "Unknown",
