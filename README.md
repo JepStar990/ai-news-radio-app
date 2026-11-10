@@ -83,7 +83,7 @@ A modern, AI-enhanced news radio platform that transforms text articles into imm
 
 ### Prerequisites
 - Node.js 18+ 
-- OpenAI API key for AI features
+- OpenAI API key for AI features (optional for basic browsing)
 
 ### Installation
 
@@ -98,20 +98,28 @@ A modern, AI-enhanced news radio platform that transforms text articles into imm
    npm install
    ```
 
-3. **Set up environment variables**
+3. **Set up environment variables** (optional in development)
    Create a `.env` file in the root directory:
    ```env
    OPENAI_API_KEY=your_openai_api_key_here
    DATABASE_URL=your_database_url_here
    ```
+   Development uses in-memory storage when `DATABASE_URL` is not set.
 
-4. **Start the development server**
+4. **Start the backend API server**
    ```bash
    npm run dev
    ```
+   The API server runs on `http://localhost:5000`.
 
-5. **Open your browser**
-   Navigate to `http://localhost:5000`
+5. **Start the frontend dev server** (in a second terminal)
+   ```bash
+   npx vite --port 3000
+   ```
+   The Vite dev server proxies `/api` requests to the backend on port 5000.
+
+6. **Open your browser**
+   Navigate to `http://localhost:3000`
 
 ## 📁 Project Structure
 
